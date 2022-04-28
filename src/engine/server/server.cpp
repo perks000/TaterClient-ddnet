@@ -1515,9 +1515,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			CClient::CInput *pInput;
 			int64_t TagTime;
 
-			m_aClients[ClientID].m_LastAckedSnapshot = Unpacker.GetInt();
+			int LastAckedSnap = Unpacker.GetInt();
 			int IntendedTick = Unpacker.GetInt();
 			int Size = Unpacker.GetInt();
+
+			if(LastAckedSnap > m_aClients[ClientID].m_LastAckedSnapshot)
+				m_aClients[ClientID].m_LastAckedSnapshot = LastAckedSnap;
+
+			if(IntendedTick < Tick() && m_aClients[ClientID].m_LastInputTick >= Tick())
+				return;
 
 			// check for errors
 			if(Unpacker.Error() || Size / 4 > MAX_INPUT_SIZE)
